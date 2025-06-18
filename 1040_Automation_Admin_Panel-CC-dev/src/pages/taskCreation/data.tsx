@@ -128,24 +128,85 @@ export const initialMockTasks = [
 	},
 ];
 
-export const initialFormState = {
-	companyName: "",
-	clientName: "",
-	clientId: 0,
-	subClientName: "",
-	subClientId: 0,
-	taxYear: "",
-	residentState: "",
-	software: "",
-	softwareType: "",
-	softwareUser: "",
-	softwarePass: "",
-	vpnUser: "",
-	vpnPass: "",
-	rdcUser: "",
-	rdcComputer: "",
-	rdcPass: "",
-	splashtopEmail: "",
-	splashtopPass: "",
-	remoteIp: "",
+export interface TaskFormData {
+    // Task Related Fields
+	filing_status_id: number;
+    task_uid: string;
+    client_id: number;
+    sub_client_id: number;
+    tax_year: number;
+    resident_state: string;
+    
+    // Software Related Fields
+    software_type: string;
+    software_name: string;
+    software_exe_path: string;
+    software_ip_address: string;
+    software_username: string;
+    software_password: string;
+
+    // VPN Related Fields
+    vpn_name: string;
+    vpn_exe_path: string;
+    vpn_ip_address: string;
+    vpn_username: string;
+    vpn_password: string;
+
+    // RDC Related Fields
+    rdc_name: string;
+    rdc_exe_path: string;
+    rdc_ip_address: string;
+    rdc_username: string;
+    rdc_password: string;
+
+    // Splashtop Related Fields
+    splashtop_email: string;
+    splashtop_password: string;
+    
+    // Display only fields (not saved)
+    client_name: string;
+    sub_client_name: string;
+    company_name: string;
+    network_access_type: string;
+}
+
+export const initialFormState: TaskFormData = {
+    task_uid: "",
+	filing_status_id: 1,
+    client_id: 0,
+    sub_client_id: 0,
+    tax_year: 2024,
+    resident_state: "",
+    
+    // Software Related Fields
+    software_type: "",
+    software_name: "Drake", // Default to Drake
+    software_exe_path: "",
+    software_ip_address: "",
+    software_username: "",
+    software_password: "",
+
+    // VPN Related Fields
+    vpn_name: "",
+    vpn_exe_path: "",
+    vpn_ip_address: "",
+    vpn_username: "",
+    vpn_password: "",
+
+    // RDC Related Fields
+    rdc_name: "",
+    rdc_exe_path: "",
+    rdc_ip_address: "",
+    rdc_username: "",
+    rdc_password: "",
+    
+    // Splashtop Related Fields
+    splashtop_email: "",
+    splashtop_password: "",
+
+    // Display only fields (not saved)
+    client_name: "",
+    sub_client_name: "",
+    company_name: "",
+    network_access_type: ""
 };

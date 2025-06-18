@@ -12,7 +12,7 @@ const {
 // Get all subclients
 router.get('/', authenticate, getSubClientsController);
 // Get subclients by User ID
-router.get('/:Id', authenticate, getSubClientByIdController);
+router.get('/get', authenticate, getSubClientByIdController);
 // Create a new subclient
 router.post('/add', authenticate, createSubClientController);
 // Archive a subclient by ID

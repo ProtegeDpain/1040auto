@@ -1,8 +1,12 @@
 const { PrismaClient } = require('@prisma/client');
 const { BlockBlobClient } = require('@azure/storage-blob');
 const { uploadToAzureBlob } = require('../utils/azureBlob');
+const { mergeDocumentsToPDF } = require('../utils/toPDF');
 const { createTaskStepErrorLog } = require('../utils/taskStepErrorLog');
 const { v4: uuidv4 } = require('uuid');
+const path = require('path');
+const os = require('os');
+const fs = require('fs').promises;
 const prisma = new PrismaClient();
 
 const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -130,68 +134,115 @@ const addTaskController = async (req, res) => {
             return res.status(401).json({ error: 'Unauthorized: user not logged in.' });
         }
 
-        const {
-            client_id,
-            sub_client_id,
-            software_exe_path,
-            software_ip_address,
-            software_username,
-            software_password,
-            vpn_name,
-            vpn_exe_path,
-            vpn_ip_address,
-            vpn_username,
-            vpn_password,
-            rdc_name,
-            rdc_exe_path,
-            rdc_ip_address,
-            rdc_username,
-            rdc_password,
-            tax_year
-        } = req.body;
+        const files = req.files;
+        if (!files || files.length === 0) {
+            return res.status(400).json({ error: 'No files uploaded.' });
+        }
 
-        if (!client_id || !sub_client_id) {
+        const taskData = req.body;
+        if (!taskData.client_id || !taskData.sub_client_id) {
             return res.status(400).json({ error: 'client_id and sub_client_id are required.' });
         }
 
-        if (!tax_year) {
-            return res.status(400).json({ error: 'tax_year is required.' });
-        }
-
-        // Ensure tax_year is an integer
-        const parsedTaxYear = parseInt(tax_year, 10);
-        if (isNaN(parsedTaxYear)) {
-            return res.status(400).json({ error: 'tax_year must be an integer.' });
-        }
-
-        // Create the task without task_uid
-        const task = await prisma.tasks.create({
-            data: {
-                client_id: Number(client_id),
-                sub_client_id: Number(sub_client_id),
-                software_exe_path,
-                software_ip_address,
-                software_username,
-                software_password,
-                vpn_name,
-                vpn_exe_path,
-                vpn_ip_address,
-                vpn_username,
-                vpn_password,
-                rdc_name,
-                rdc_exe_path,
-                rdc_ip_address,
-                rdc_username,
-                rdc_password,
-                created_by: userId,
-                tax_year: parsedTaxYear
+        // Get client and subclient details for file path
+        const subClient = await prisma.subClients.findUnique({
+            where: { id: Number(taskData.sub_client_id) },
+            include: {
+                client: {
+                    include: {
+                        company: true
+                    }
+                }
             }
         });
 
-        res.status(201).json(task);
-    } catch (err) {
-        console.error('Error creating task:', err);
-        res.status(500).json({ error: 'Internal server error.' });
+        if (!subClient) {
+            return res.status(404).json({ error: 'SubClient not found.' });
+        }
+
+        // Create temp directory for file processing
+        const tempDir = path.join(os.tmpdir(), 'task-files-' + Date.now());
+        await fs.mkdir(tempDir, { recursive: true });
+
+        try {
+            // Save files temporarily and collect paths
+            const filePaths = await Promise.all(files.map(async (file) => {
+                const tempPath = path.join(tempDir, file.originalname);
+                await fs.writeFile(tempPath, file.buffer);
+                return tempPath;
+            }));
+
+            // Merge files into single PDF
+            const mergedPdfName = `${subClient.client.name}_${subClient.firstName}_${subClient.lastName}_${Date.now()}.pdf`;
+            const mergedPdfPath = await mergeDocumentsToPDF(filePaths, mergedPdfName, tempDir);
+
+            // Upload merged PDF to Azure
+            const mergedPdfBuffer = await fs.readFile(mergedPdfPath);
+            const mergedPdfFile = {
+                buffer: mergedPdfBuffer,
+                originalname: mergedPdfName,
+                mimetype: 'application/pdf'
+            };
+
+            // Upload to Azure with proper path structure
+            const blobUrl = await uploadToAzureBlob(mergedPdfFile, {
+                tax_year: taskData.tax_year,
+                client_name: subClient.client.name,
+                subclient_name: `${subClient.firstName}_${subClient.lastName}`
+            });
+
+            // Create task in database
+            const task = await prisma.tasks.create({
+                data: {
+                    task_uid: uuidv4(),
+                    client_id: Number(taskData.client_id),
+                    sub_client_id: Number(taskData.sub_client_id),
+                    tax_year: parseInt(taskData.tax_year, 10),
+                    resident_state: taskData.resident_state,
+                    
+                    // software_name: taskData.software_name,
+                    software_exe_path: taskData.software_exe_path,
+                    software_ip_address: taskData.software_ip_address,
+                    software_username: taskData.software_username,
+                    software_password: taskData.software_password,
+                    vpn_name: taskData.vpn_name,
+                    vpn_exe_path: taskData.vpn_exe_path,
+                    vpn_ip_address: taskData.vpn_ip_address,
+                    vpn_username: taskData.vpn_username,
+                    vpn_password: taskData.vpn_password,
+                    rdc_name: taskData.rdc_name,
+                    rdc_exe_path: taskData.rdc_exe_path,
+                    rdc_ip_address: taskData.rdc_ip_address,
+                    rdc_username: taskData.rdc_username,
+                    rdc_password: taskData.rdc_password,
+                    // splashtop_email: taskData.splashtop_email,
+                    // splashtop_password: taskData.splashtop_password,
+                    // documents_url: blobUrl,
+                    created_by: userId
+                }
+            });
+
+            res.status(201).json({
+                message: 'Task created successfully',
+                task: {
+                    ...task,
+                    client_name: subClient.client.name,
+                    sub_client_name: `${subClient.firstName} ${subClient.lastName}`,
+                    company_name: subClient.client.company.company_name
+                }
+            });
+
+        } finally {
+            // Clean up temp directory
+            await fs.rm(tempDir, { recursive: true, force: true });
+        }
+
+    } catch (error) {
+        console.error('Error in addTaskController:', error);
+        res.status(500).json({ 
+            error: 'Internal server error',
+            message: error.message
+        });
     }
 };
 

@@ -83,6 +83,8 @@ model FilingStatus {
   id   Int    @id @default(autoincrement())
   name String @unique
   subClients SubClients[]
+  tasks Tasks[]
+  isArchieved Boolean @default(false)
 }
 
 model SubClients {
@@ -152,9 +154,11 @@ model SubClientDependents {
 
 model Tasks {
   id                  Int        @id @default(autoincrement())
-  task_uid            String?     @unique
+  task_uid            String?    
   client_id           Int
   sub_client_id       Int
+  tax_year            Int
+  filing_status_id    Int?
   software_exe_path   String?
   software_ip_address String?
   software_username   String?
@@ -175,10 +179,11 @@ model Tasks {
   client              Clients    @relation(fields: [client_id], references: [id])
   subClient           SubClients @relation(fields: [sub_client_id], references: [id])
   createdBy           Users      @relation("CreatedTasks", fields: [created_by], references: [id])
+  filingStatus        FilingStatus? @relation(fields: [filing_status_id], references: [id])
   taskFiles           TaskFiles[]
   taskStepErrors      TaskStepErrors[]
-  isArchieved Boolean @default(false)
-  tax_year Int
+  isArchieved         Boolean    @default(false)
+  resident_state      String?
 }
 
 model TaskFiles {

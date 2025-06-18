@@ -12,29 +12,30 @@ export const getTasksById = async (userId: string) => {
   return response.data;
 };
 
-interface CreateTaskData {
-  userId: string;
-  title: string;
-  description: string;
-  client_id: number;
-  sub_client_id: number;
-  tax_year: number;
-  task_uid?: string; // Make task_uid optional
-}
-
-export const createTask = async (taskData: CreateTaskData) => {
+export const createTask = async (taskData: Record<string, any>, files: File[]) => {
   if (!taskData.client_id || !taskData.sub_client_id || !taskData.tax_year) {
     throw new Error("client_id, sub_client_id, and tax_year are required");
   }
 
-  // Send empty string as task_uid to satisfy API requirement while effectively making it optional
-  const payload = {
-    ...taskData,
-    task_uid: taskData.task_uid || "", // Provide empty string as default
-  };
+  const formData = new FormData();
+  // Append all fields as strings, except tax_year as integer
+  Object.entries(taskData).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      if (key === 'tax_year') {
+        formData.append(key, String(Number(value)));
+      } else {
+        formData.append(key, String(value));
+      }
+    }
+  });
+  // Append files
+  files.forEach(file => {
+    formData.append('files', file);
+  });
 
-  const response = await axiosInstance.post(`/api/tasks/add`, payload);
-  // Check if the response is successful
+  const response = await axiosInstance.post(`/api/tasks/add`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  });
   if (response.status !== 201) {
     throw new Error("Failed to create task");
   }

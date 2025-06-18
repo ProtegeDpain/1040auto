@@ -59,6 +59,7 @@ const createSubClientController = async (req, res) => {
 
         // Prepare dates
         const subClientData = {
+            created_by: userId,
             client_id,
             ...value,
             client: undefined, // Remove client object
@@ -127,7 +128,7 @@ const createSubClientController = async (req, res) => {
 // Get all subclients
 const getSubClientsController = async (req, res) => {
     try {
-        const userId = req.user?.id;
+        const userId = req.user.id;
         if (!userId) {
             return res.status(401).json({ error: 'Unauthorized: user not logged in.' });
         }
@@ -191,43 +192,43 @@ const getSubClientByIdController = async (req, res) => {
             return res.status(401).json({ error: 'Unauthorized: user not logged in.' });
         }
 
-        const { id } = req.params;
-        if (!id) {
-            return res.status(400).json({ error: 'SubClient id is required.' });
-        }
-
-        const subClient = await prisma.subClients.findUnique({
-            where: { created_by: Number(id) },
+        const subClients = await prisma.subClients.findMany({
+            where: { 
+                created_by: userId 
+            },
             include: {
-                dependents: true,
-                filingStatus: true,
                 client: {
                     include: {
-                        company: true
+                        company: true,
+                        softwareType: true,
+                        networkAccessType: true
                     }
                 }
             }
         });
 
-        if (!subClient) {
-            return res.status(404).json({ error: 'SubClient not found.' });
+        if (!subClients || subClients.length === 0) {
+            return res.status(404).json({ error: 'No subclients found for this user.' });
         }
-        const data = {
+
+        const formattedSubClients = subClients.map(subClient => ({
             id: subClient.id,
-            name: subClient.firstName + ' ' + subClient.lastName,
-            ssn: subClient.ssn ? '***-**-****' : null,// Mask sensitive data 
-        };
-        res.status(200).json(data);
+            client_id: subClient.client.id,
+            client_name: subClient.client.name,
+            name: `${subClient.firstName} ${subClient.lastName}`,
+            ssn: subClient.ssn , // Mask sensitive data
+            company_name: subClient.client.company.company_name,
+            tax_software_type: subClient.client.softwareType.name,
+            tax_software_id: subClient.client.softwareType.id,
+            network_access_type_id: subClient.client.networkAccessType.id,
+            network_access_type: subClient.client.networkAccessType.name,
+        }));
+
+        res.status(200).json(formattedSubClients);
     } catch (err) {
         console.error('Error fetching subclient by ID:', err);
         res.status(500).json({ error: 'Internal server error.' });
     }
-    if (err.code === 'P2025') {
-        return res.status(404).json({ error: 'SubClient not found.' });
-    }
-    console.error('Error fetching subclient:', err);
-    res.status(500).json({ error: 'Internal server error.' });
-    
 };
 
 // Archive a subclient by ID

@@ -1,5 +1,4 @@
 import axiosInstance from '@/providers/axiosInstance';
-import { useAuth } from '@/contexts/auth-context';  
 export const createSubClientService = async (formData: any) => {
   // Prepare payload according to backend validators
   const payload: any = {
@@ -77,14 +76,47 @@ export const createSubClientService = async (formData: any) => {
     );
   }
 };
-export const getSubClientById = async () => {
-   const response = await axiosInstance.get('/api/clients/subclients')
-   return response.data;  
-};
-export const getSubClientByUserId = async (Id: number) => {
-  if (!Id) {
-    throw new Error('Client ID is required');
+
+interface SubClientResponse {
+  id: number;
+  sub_client_name: string;
+  client_name: string;
+  client_id: number;
+  company_name: string;
+  tax_software_type: string;
+  sub_client_ssn?: string;
+}
+
+export const getSubClientById = async (): Promise<SubClientResponse[]> => {
+  try {
+    const response = await axiosInstance.get('/api/clients/subclients/get');
+    if (response.status !== 200) {
+      throw new Error('Failed to fetch sub-clients');
+    }
+    
+    // Ensure we have the required fields in the response
+    const subclients = response.data.map((subclient: any) => ({
+      id: subclient.id,
+      sub_client_name: subclient.name,
+      client_name: subclient.client_name,
+      client_id: subclient.client_id,
+      company_name: subclient.company_name,
+      tax_software_type: subclient.tax_software_type,
+      sub_client_ssn: subclient.ssn, // Optional field
+    }));
+
+    return subclients;
+  } catch (error: any) {
+    throw new Error(
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      'Failed to fetch sub-clients'
+    );
   }
-  const response = await axiosInstance.get(`/api/clients/subclients/${Id}`);
+};
+
+export const getSubClientByUserId = async () => {
+
+  const response = await axiosInstance.get(`/api/clients/subclients/get`);
   return response.data;
 };
