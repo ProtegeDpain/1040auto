@@ -7,7 +7,7 @@ export const navItems: NavItem[] = [
     href: '/',
     icon: 'dashboard',
     label: 'Dashboard',
-    roles: [ROLES.ADMIN, ROLES.USER] // Accessible to both Admin and User roles
+    roles: [ROLES.ADMIN] // Accessible to both Admin and User roles
   },
   {
     title: 'Users',
@@ -36,13 +36,6 @@ export const navItems: NavItem[] = [
     icon: 'settings',
     label: 'Admin Configurations',
     roles: [ROLES.ADMIN] // Accessible to Admin role only
-  },
-  {
-    title: 'Login',
-    href: '/login',
-    icon: 'login',
-    label: 'Login',
-    roles: [ROLES.ADMIN, ROLES.USER] // Accessible to both Admin and User roles
   }
 ];
 

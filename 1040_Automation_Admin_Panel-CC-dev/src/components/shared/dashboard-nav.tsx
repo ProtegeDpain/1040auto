@@ -13,6 +13,8 @@ import {
 import { usePathname } from '@/routes/hooks';
 import { Link } from 'react-router-dom';
 import { RoleGuard } from '@/components/role-gaurd';
+import { useAuth } from '@/contexts/auth-context';
+import { useNavigate } from 'react-router-dom';
 
 interface DashboardNavProps {
   items: NavItem[];
@@ -27,6 +29,8 @@ export default function   DashboardNav({
 }: DashboardNavProps) {
   const path = usePathname();
   const { isMinimized } = useSidebar();
+  const { logout } = useAuth();
+const navigate = useNavigate();
 
   if (!items?.length) {
     return null;
@@ -80,6 +84,35 @@ export default function   DashboardNav({
             </RoleGuard>
           );
         })}
+        <Tooltip>
+  <TooltipTrigger asChild>
+    <button
+      onClick={() => {
+        logout(); // call logout from context
+        navigate('/login'); // redirect to login
+      }}
+      className={cn(
+        'flex items-center gap-2 overflow-hidden rounded-md py-2 text-sm font-medium text-red-600 hover:text-red-700 ml-2.5'
+      )}
+    >
+      <Icons.login className="size-5" />
+      {isMobileNav || (!isMinimized && !isMobileNav) ? (
+        <span className="mr-2 truncate">Log out</span>
+      ) : (
+        ''
+      )}
+    </button>
+  </TooltipTrigger>
+  <TooltipContent
+    align="center"
+    side="right"
+    sideOffset={8}
+    className={!isMinimized ? 'hidden' : 'inline-block'}
+  >
+    Log out
+  </TooltipContent>
+</Tooltip>
+
       </TooltipProvider>
     </nav>
   );

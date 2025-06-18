@@ -30,12 +30,6 @@ export const navItems: NavItem[] = [
     href: '/adminConfigurations',
     icon: 'settings',
     label: 'Admin Configurations'
-  },
-  {
-    title: 'Login',
-    href: '/login',
-    icon: 'login',
-    label: 'Login'
   }
 ];
 

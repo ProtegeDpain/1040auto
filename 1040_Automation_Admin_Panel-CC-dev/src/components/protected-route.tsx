@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/auth-context';
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user } = useAuth();
 
-  if (!user) return <Navigate to="/unauthorized" />;
+  if (!user) return <Navigate to="/login" />;
   if (!allowedRoles.includes(user.role)) return <Navigate to="/unauthorized" />;
 
   return children;

@@ -20,9 +20,11 @@ import {
 } from '@/lib/client-registration-constants';
 import { Stepper } from '@/components/shared/Stepper';
 import { createSubClientService } from '@/services/subClientService';
-import { useToast } from "@/components/ui/use-toast";
 import { Formik, Form, Field, FieldArray, ErrorMessage } from 'formik';
-
+import { toast } from 'react-toastify';
+import * as Yup from 'yup';
+import { FormikErrors } from 'formik';
+import { stepSchemas } from '../validations/subClientSchema';
 
 const initialForm: {
   clientId?: number;
@@ -159,7 +161,6 @@ export default function SubClientGIF({
   clients = [],
   onSubmit
 }: SubClientGIFProps) {
-  const { toast } = useToast();
   // Map ClientData[] to expected Client[]
   const mappedClients = clients.map((c) => ({
     id: c.id,
@@ -186,10 +187,37 @@ export default function SubClientGIF({
     event.preventDefault();
     setStep((s) => (s > 0 ? s - 1 : s));
   }
-  function nextStep(event) {
-    event.preventDefault();
-    setStep((s) => (s < steps.length - 1 ? s + 1 : s));
-  }
+function nextStep(
+  event: React.MouseEvent<HTMLButtonElement>,
+  values: SubClientFormValues,
+  setErrors: (errors: FormikErrors<SubClientFormValues>) => void,
+  step: number,
+  setStep: React.Dispatch<React.SetStateAction<number>>
+) {
+  event.preventDefault();
+
+  stepSchemas[step]
+    .validate(values, { abortEarly: false })
+    .then(() => {
+      setStep((prev) => prev + 1);
+    })
+    .catch((validationError: Yup.ValidationError) => {
+      const errors: FormikErrors<SubClientFormValues> = {};
+
+      validationError.inner.forEach((err) => {
+        if (err.path) {
+          errors[err.path as keyof SubClientFormValues] = err.message;
+
+          toast.error(err.message, {
+            toastId: `step-${step}-${err.path}`, // prevents duplicates
+          });
+        }
+      });
+
+      setErrors(errors);
+    });
+}
+
 
   // Keep form in sync with editSubClient prop (if you add edit functionality for subclients)
   // useEffect(() => {
@@ -283,26 +311,18 @@ export default function SubClientGIF({
             onSubmit(response);
           }
           
-          toast({
-            title: "Success",
-            description: "Subclient created successfully",
-            variant: "default"
-          });
+          toast.success;
           
           resetForm();
         } catch (error: any) {
           console.error('Failed to create subclient:', error);
-          toast({
-            title: "Error",
-            description: error.response?.data?.message || error.message || "Failed to create subclient",
-            variant: "destructive"
-          });
+          toast.error(error.message)
         } finally {
           setSubmitting(false);
         }
       }}
     >
-      {({ values, errors, touched, setFieldValue, isSubmitting }) => {
+      {({ values, errors, touched, setFieldValue, isSubmitting, setErrors }) => {
         return (
           <div className="mx-auto mt-8 flex h-full max-h-[90vh] w-full max-w-2xl flex-col rounded-lg bg-white p-0 shadow">
             <div className="border-b p-6">
@@ -1064,9 +1084,13 @@ export default function SubClientGIF({
                   Back
                 </Button>
                 {step < steps.length - 1 && (
-                  <Button type="button" onClick={nextStep}>
-                    Next
-                  </Button>
+                  <Button
+  type="button"
+  onClick={(e) => nextStep(e, values, setErrors, step, setStep)}
+>
+  Next
+</Button>
+
                 )}
               </div>
             </Form>

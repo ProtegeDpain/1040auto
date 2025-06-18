@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { usStates } from '@/lib/us-states';
 import { v4 as uuidv4 } from 'uuid';
-
+import { stepSchemas } from '@/pages/taskCreation/validations/taskSchema';
 import {
   Select,
   SelectTrigger,
@@ -17,6 +17,10 @@ import {
 import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/ui/icons.tsx';
 import { softwareTypes, type TaskFormData, initialFormState } from '../data';
+import * as Yup from 'yup';
+import { toast } from 'react-toastify';
+import { FormikErrors } from 'formik'; // if you use Formik types
+import { validateFiles } from '../validations/fileValidator';
 
 interface SubClientData {
   id: number;
@@ -67,8 +71,42 @@ export function TaskCreationForm({ onTaskCreated, onClose }: TaskCreationFormPro
 
     fetchData();
   }, []);
+  
+const [errors, setErrors] = useState<FormikErrors<TaskFormData>>({});
+async function validateStep(
+  step: number,
+  form: TaskFormData,
+  setErrors: (errors: FormikErrors<TaskFormData>) => void
+): Promise<boolean> {
+  try {
+    await stepSchemas[step - 1].validate(form, { abortEarly: false });
+    return true;
+  } catch (validationError) {
+    const errors: FormikErrors<TaskFormData> = {};
+    if (validationError instanceof Yup.ValidationError) {
+      validationError.inner.forEach((err) => {
+        if (err.path) {
+          errors[err.path as keyof TaskFormData] = err.message;
+          toast.error(err.message, {
+            toastId: `step-${step}-${err.path}`,
+          });
+        }
+      });
+    }
+    setErrors(errors);
+    return false;
+  }
+}
 
-  const handleNext = () => setStep((prev) => prev + 1);
+const handleNext = async () => {
+  const isValid = await validateStep(step, form, setErrors); // ✅ await the Promise
+
+  if (isValid) {
+    setStep((prev) => prev + 1);
+  }
+};
+
+  
   const handleBack = () => setStep((prev) => prev - 1);
 
   const handleChange = (field: keyof TaskFormData, value: string | number) => {
@@ -82,19 +120,12 @@ export function TaskCreationForm({ onTaskCreated, onClose }: TaskCreationFormPro
       return;
     }
 
-    console.log('DEBUG: sub_client_id:', form.sub_client_id, 'tax_year:', form.tax_year, 'client_id:', form.client_id);
-    if (!form.sub_client_id || !form.tax_year) {
-      alert('Sub Client and Tax Year are required');
-      return;
-    }
+const isFormValid = await validateStep(3, form, setErrors);
+  const areFilesValid = validateFiles(supportingDocs);
 
-    // Validate tax year format
-    const taxYear = parseInt(String(form.tax_year));
-    if (isNaN(taxYear) || taxYear < 2000 || taxYear > 2100) {
-      alert('Please enter a valid tax year between 2000 and 2100');
-      return;
-    }
-
+  if (!isFormValid || !areFilesValid) {
+    return;
+  }
     setLoading(true);
     try {
       // TODO: Upload documents and get blobUrl
@@ -723,6 +754,7 @@ export function TaskCreationForm({ onTaskCreated, onClose }: TaskCreationFormPro
       </div>
     );
   };
+
 
   return (
     <form
