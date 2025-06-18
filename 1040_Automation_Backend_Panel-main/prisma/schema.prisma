@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Roles {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users Users[]
+}
+
+model Users {
+  id            Int      @id @default(autoincrement())
+  full_name     String
+  username      String   @unique
+  phone_number  String?
+  email         String   @unique
+  password_hash String
+  role_id       Int
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  role         Roles    @relation(fields: [role_id], references: [id])
+  tasks        Tasks[]  @relation("CreatedTasks")
+}
+
+model SoftwareTypes {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  clients    Clients[]
+}
+
+model NetworkAccessTypes {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  clients    Clients[]
+}
+
+model Clients {
+  id                    Int                @id @default(autoincrement())
+  name                  String
+  software_type_id      Int
+  network_access_type_id Int
+  created_at            DateTime           @default(now())
+  updated_at            DateTime           @updatedAt
+  softwareType          SoftwareTypes      @relation(fields: [software_type_id], references: [id])
+  networkAccessType     NetworkAccessTypes @relation(fields: [network_access_type_id], references: [id])
+  subClients            SubClients[]
+  tasks                 Tasks[]
+}
+
+model SubClients {
+  id           Int        @id @default(autoincrement())
+  client_id    Int
+  name         String
+  ssn          String?    @db.VarChar(11)
+  spouse_name  String?
+  spouse_ssn   String?    @db.VarChar(11)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+  client       Clients    @relation(fields: [client_id], references: [id])
+  dependents   SubClientDependents[]
+  tasks        Tasks[]
+}
+
+model SubClientDependents {
+  id            Int        @id @default(autoincrement())
+  sub_client_id Int
+  name          String
+  ssn           String?    @db.VarChar(11)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+  subClient     SubClients @relation(fields: [sub_client_id], references: [id])
+}
+
+model Tasks {
+  id                  Int        @id @default(autoincrement())
+  task_uid            String     @unique
+  client_id           Int
+  sub_client_id       Int
+  software_exe_path   String?
+  software_ip_address String?
+  software_username   String?
+  software_password   String?
+  vpn_name            String?
+  vpn_exe_path        String?
+  vpn_ip_address      String?
+  vpn_username        String?
+  vpn_password        String?
+  rdc_name            String?
+  rdc_exe_path        String?
+  rdc_ip_address      String?
+  rdc_username        String?
+  rdc_password        String?
+  created_by          Int
+  created_at          DateTime   @default(now())
+  updated_at          DateTime   @updatedAt
+  client              Clients    @relation(fields: [client_id], references: [id])
+  subClient           SubClients @relation(fields: [sub_client_id], references: [id])
+  createdBy           Users      @relation("CreatedTasks", fields: [created_by], references: [id])
+  taskFiles           TaskFiles[]
+  taskStepErrors      TaskStepErrors[]
+}
+
+model TaskFiles {
+  id                Int      @id @default(autoincrement())
+  task_id           Int
+  file_type         String   @db.VarChar(50)
+  original_filename String
+  azure_blob_url    String
+  blob_folder_name  String
+  uploaded_at       DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  task              Tasks    @relation(fields: [task_id], references: [id])
+}
+
+model TaskStatuses {
+  id          Int      @id @default(autoincrement())
+  status_name String   @unique
+  description String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  taskStepErrors TaskStepErrors[]
+}
+
+model TaskStepErrors {
+  id           Int          @id @default(autoincrement())
+  task_id      Int
+  status_id    Int
+  error_message String?
+  error_code   String?      @db.VarChar(50)
+  occurred_at  DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+  task         Tasks        @relation(fields: [task_id], references: [id])
+  status       TaskStatuses @relation(fields: [status_id], references: [id])
+}

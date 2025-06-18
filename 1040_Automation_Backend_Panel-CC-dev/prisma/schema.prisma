@@ -1,0 +1,218 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Roles {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users Users[]
+  isArchieved Boolean @default(false)
+}
+
+model Users {
+  id           Int      @id @default(autoincrement())
+  full_name    String
+  username     String   @unique
+  phone_number String?
+  email        String   @unique
+  password_hash String
+  role_id      Int
+  is_active    Boolean  @default(true)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+  role         Roles    @relation(fields: [role_id], references: [id])
+  tasks        Tasks[]  @relation("CreatedTasks")
+  clients      Clients[] @relation("UserClients")
+  isArchieved Boolean @default(false)
+}
+
+model SoftwareTypes {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  clients    Clients[]
+  isArchieved Boolean @default(false)
+}
+
+model NetworkAccessTypes {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  clients    Clients[]
+  isArchieved Boolean @default(false)
+}
+
+model Company {
+  id          Int     @id @default(autoincrement())
+  company_name String @unique
+  client      Clients?
+}
+
+model Clients {
+  id                    Int                @id @default(autoincrement())
+  name                  String
+  company_id            Int     @unique
+  company               Company @relation(fields: [company_id], references: [id])
+  software_type_id      Int
+  network_access_type_id Int
+  created_at            DateTime           @default(now())
+  updated_at            DateTime           @updatedAt
+  softwareType          SoftwareTypes      @relation(fields: [software_type_id], references: [id])
+  networkAccessType     NetworkAccessTypes @relation(fields: [network_access_type_id], references: [id])
+  subClients            SubClients[]
+  tasks                 Tasks[]
+  isArchieved Boolean @default(false)
+  created_by Int
+  createdBy Users @relation("UserClients", fields: [created_by], references: [id])
+}
+
+model FilingStatus {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+  subClients SubClients[]
+}
+
+model SubClients {
+  id           Int        @id @default(autoincrement())
+  created_by   Int
+  client_id    Int
+  // Personal Info
+  firstName    String    // Temporarily optional for migration
+  middleInitial String?
+  lastName     String    // Temporarily optional for migration
+
+  suffix       String?
+  dob          DateTime?
+  occupation   String?
+  email        String?
+  cell         String?
+  ssn          String?    @db.VarChar(11)
+  
+  // Spouse Info
+  spouse_ssn   String?    @db.VarChar(11)
+  spouseFirstName String?
+  spouseMiddleInitial String?
+  spouseLastName String?
+  spouseSuffix String?
+  spouseDOB DateTime?
+  spouseOccupation String?
+  spousePhone String?
+  spouseEmail String?
+  
+  // Address Info
+  street       String?
+  apt          String?
+  city         String?
+  state        String?
+  zip          String?    @db.VarChar(10)
+  county       String?
+  isForeign    Boolean    @default(false)
+  province     String?
+  country      String?
+  postalCode   String?
+  
+  // Tax Info
+  filing_status_id Int?
+  taxYear      Int         @default(2025)
+  residentialState String?
+
+  // Timestamps and Relations
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+  client       Clients    @relation(fields: [client_id], references: [id])
+  dependents   SubClientDependents[]
+  tasks        Tasks[]
+  isArchieved  Boolean    @default(false)
+  filingStatus FilingStatus? @relation(fields: [filing_status_id], references: [id])
+}
+
+model SubClientDependents {
+  id            Int        @id @default(autoincrement())
+  sub_client_id Int
+  name          String
+  ssn           String?    @db.VarChar(11)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+  subClient     SubClients @relation(fields: [sub_client_id], references: [id])
+  isArchieved Boolean @default(false)
+}
+
+model Tasks {
+  id                  Int        @id @default(autoincrement())
+  task_uid            String?     @unique
+  client_id           Int
+  sub_client_id       Int
+  software_exe_path   String?
+  software_ip_address String?
+  software_username   String?
+  software_password   String?
+  vpn_name            String?
+  vpn_exe_path        String?
+  vpn_ip_address      String?
+  vpn_username        String?
+  vpn_password        String?
+  rdc_name            String?
+  rdc_exe_path        String?
+  rdc_ip_address      String?
+  rdc_username        String?
+  rdc_password        String?
+  created_by          Int
+  created_at          DateTime   @default(now())
+  updated_at          DateTime   @updatedAt
+  client              Clients    @relation(fields: [client_id], references: [id])
+  subClient           SubClients @relation(fields: [sub_client_id], references: [id])
+  createdBy           Users      @relation("CreatedTasks", fields: [created_by], references: [id])
+  taskFiles           TaskFiles[]
+  taskStepErrors      TaskStepErrors[]
+  isArchieved Boolean @default(false)
+  tax_year Int
+}
+
+model TaskFiles {
+  id                Int      @id @default(autoincrement())
+  task_id           Int
+  file_type         String   @db.VarChar(50)
+  original_filename String
+  azure_blob_url    String
+  blob_folder_name  String
+  uploaded_at       DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  task              Tasks    @relation(fields: [task_id], references: [id])
+  isArchieved Boolean @default(false)
+}
+
+model TaskStatuses {
+  id          Int      @id @default(autoincrement())
+  status_name String   @unique
+  description String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  taskStepErrors TaskStepErrors[]
+  isArchieved Boolean @default(false)
+}
+
+model TaskStepErrors {
+  id           Int          @id @default(autoincrement())
+  task_id      Int
+  status_id    Int
+  error_message String?
+  error_code   String?      @db.VarChar(50)
+  occurred_at  DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+  task         Tasks        @relation(fields: [task_id], references: [id])
+  status       TaskStatuses @relation(fields: [status_id], references: [id])
+  isArchieved Boolean @default(false)
+}
