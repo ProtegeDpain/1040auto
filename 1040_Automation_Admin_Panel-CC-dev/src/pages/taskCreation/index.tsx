@@ -30,23 +30,7 @@ function AddTaskButton({ onClick }) {
 
 // Task Table Component
 function TaskTable({ tasks, onViewTask }) {
-  const statusMap = {
-    uploading: { label: 'Uploading', color: 'bg-yellow-200 text-yellow-800' },
-    pending: { label: 'Pending', color: 'bg-yellow-200 text-yellow-800' },
-    workbook: {
-      label: 'Workbook Created',
-      color: 'bg-green-300 text-green-900'
-    },
-    drake: {
-      label: 'Drake Report Created',
-      color: 'bg-green-300 text-green-900'
-    },
-    leadsheet: {
-      label: 'Lead Sheet Created',
-      color: 'bg-green-300 text-green-900'
-    },
-    completed: { label: 'Completed', color: 'bg-blue-300 text-blue-900' }
-  };
+  
 
   const [filters, setFilters] = React.useState({
     client: '',
@@ -101,7 +85,7 @@ function TaskTable({ tasks, onViewTask }) {
           ?.toLowerCase()
           .includes(filters.softwareType.toLowerCase())) &&
       (!filters.status ||
-        statusMap[task.status]?.label
+        task.status
           .toLowerCase()
           .includes(filters.status.toLowerCase()))
   );
@@ -157,7 +141,7 @@ function TaskTable({ tasks, onViewTask }) {
       header: () => (
         <div className="flex flex-col gap-1">
           
-          <span>Software Type</span>
+          <span>Network Access</span>
         </div>
       ),
       cell: (info) => info.getValue()
@@ -167,12 +151,12 @@ function TaskTable({ tasks, onViewTask }) {
       header: () => (
         <div className="flex flex-col gap-1">
           
-          <span>Filing Status</span>
+          <span>Status</span>
         </div>
       ),
       cell: (info) => (
         <span
-          className={`rounded px-3 py-1 font-medium ${info.getValue() === 'Unknown' ? 'bg-yellow-200 text-yellow-800' : 'bg-blue-200 text-blue-800'
+          className={`rounded px-3 py-1 font-medium ${info.getValue() === 'Pending' ? 'bg-yellow-200 text-yellow-800' : 'bg-blue-200 text-blue-800'
             }`}
         >
           {String(info.getValue())}
@@ -183,7 +167,7 @@ function TaskTable({ tasks, onViewTask }) {
       id: 'view',
       header: 'View',
       cell: (info) => (
-        <div className="flex h-full gap-2">
+        <div className="flex h-full gap-3">
           <button
             className="flex items-center justify-center rounded p-1 hover:bg-muted"
             onClick={() => onViewTask(info.row.original)}
@@ -195,20 +179,7 @@ function TaskTable({ tasks, onViewTask }) {
             className="flex items-center justify-center rounded p-1 hover:bg-muted"
             title="Download Task"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"
-              />
-            </svg>
+            <Icons.download className='h-5 w-5'/>
           </button>
         </div>
       )
@@ -218,12 +189,11 @@ function TaskTable({ tasks, onViewTask }) {
       header: 'Update Documents',
       cell: (info) => (
         <button
-          className="flex gap-2 rounded  p-2 hover:bg-muted"
-          title="Upload Documents"
-        >
-          <Icons.upload className="h-5 w-5" />
-          
-        </button>
+            className="flex items-center justify-center rounded p-1 hover:bg-muted"
+            title="Download Task"
+          >
+            <Icons.upload className='h-5 w-5'/>
+          </button>
       )
     }
   ];
@@ -332,7 +302,7 @@ export default function TaskManagement() {
           companyName: task.company,
           software: task.taxSoftwareName,
           softwareType: task.softwareType,
-          status: task.filingStatus || 'pending',
+          status: task.taskStatus || 'pending',
           lastProcessDate: task.lastProcessDate
         }));
         setTasks(formattedTasks);

@@ -89,7 +89,7 @@ export default function DataTable<TData, TValue>({
     <>
       <ScrollArea className="h-auto rounded-lg border border-border bg-card">
         <Table className="relative min-w-full text-sm">
-          <TableHeader className="sticky top-0 z-10 bg-background">
+          <TableHeader className="sticky top-0  bg-background">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -114,7 +114,7 @@ export default function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
-                  className="border-t border-border hover:bg-muted/50"
+                  className=" border-t border-border hover:bg-muted/50"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="px-4 py-2">
@@ -130,7 +130,7 @@ export default function DataTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center text-muted-foreground"
+                  className="h-16px text-center text-muted-foreground"
                 >
                   No results.
                 </TableCell>

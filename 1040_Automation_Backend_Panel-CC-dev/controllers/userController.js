@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 const {validateUser , validateUserUpdate} = require('../validations/userValidator'); 
 async function createUserController(req, res) {
     try {
-        const { full_name, phone_number, email, password, role_id, username } = req.body;
+        const { first_name, phone_number, email, password, role_id, last_name } = req.body;
 
         // Use Joi validation
         const { error } = validateUser(req.body);
@@ -18,13 +18,13 @@ async function createUserController(req, res) {
 
         const user = await prisma.users.create({
             data: {
-                full_name,
+                first_name,
                 phone_number,
                 email,
                 password_hash,
                 role_id,
                 is_active: true,
-                username // Store username in the database
+                last_name // Store username in the database
             }
         });
 
@@ -45,8 +45,8 @@ const getUserController = async (req, res) => {
             message: 'Users fetched successfully.',
             users: users.map(user => ({
                 id: user.id,
-                full_name: user.full_name,
-                username: user.username,
+                first_name: user.first_name,
+                last_name: user.last_name,
                 email: user.email,
                 phone_number: user.phone_number,
                 role_id: user.role_id,
@@ -103,7 +103,7 @@ const unarchiveUserController = async (req, res) => {
 const updateUserController = async (req, res) => {
     try {
         const { id } = req.params;
-        const { full_name, phone_number, email, role_id, username } = req.body;
+        const { first_name, phone_number, email, role_id, last_name } = req.body;
 
         if (!id) {
             return res.status(400).json({ error: 'User id is required.' });
@@ -120,11 +120,11 @@ const updateUserController = async (req, res) => {
         const user = await prisma.users.update({
             where: { id: Number(id) },
             data: {
-                full_name,
+                first_name,
                 phone_number,
                 email,
                 role_id,
-                username // Update username in the database
+                last_name // Update username in the database
             }
         });
 

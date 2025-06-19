@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Edit, Trash2 } from 'lucide-react';
 import DataTable from '@/components/shared/data-table';
 import { ColumnDef } from '@tanstack/react-table';
-import { ROLES } from '@/constants/roles';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+
+import * as Popover from '@radix-ui/react-popover';
 
 interface UserTableProps {
   users: Employee[];
@@ -35,14 +35,14 @@ export default function UserTable({ users, onEdit, onDelete, onUserCreated }: Us
     // Apply search filter
     if (searchTerm.trim()) {
       filtered = filtered.filter(user => {
-        const fullName = `${user.first_name || ''} ${user.last_name || ''}`.toLowerCase();
-        const username = (user.username || '').toLowerCase();
+        const firstName = (user.first_name).toLowerCase();
+        const lastName = (user.last_name || '').toLowerCase();
         const email = (user.email || '').toLowerCase();
         const role = String(user.role || '').toLowerCase();
         const search = searchTerm.toLowerCase();
         
-        return fullName.includes(search) || 
-               username.includes(search) || 
+        return firstName.includes(search) || 
+               lastName.includes(search) || 
                email.includes(search) || 
                role.includes(search);
       });
@@ -59,19 +59,24 @@ export default function UserTable({ users, onEdit, onDelete, onUserCreated }: Us
   // Define columns for DataTable
   const columns: ColumnDef<Employee>[] = [
     {
-      accessorKey: 'name',
-      header: () => <div className="font-semibold">Name</div>,
+      accessorKey: 'firstName',
+      header: () => <div className="font-semibold">First Name</div>,
       cell: ({ row }) => (
         <span className="font-medium">
-          {row.original.first_name || ''} {row.original.last_name || ''}
+          {row.original.first_name || ''}
         </span>
       )
     },
     {
-      accessorKey: 'username',
-      header: () => <div className="font-semibold">User Name</div>,
-      cell: ({ row }) => <span>{row.original.username}</span>
+      accessorKey: 'lastName',
+      header: () => <div className="font-semibold">Last Name</div>,
+      cell: ({ row }) => (
+        <span className="font-medium">
+          {row.original.last_name || ''}
+        </span>
+      )
     },
+    
     {
       accessorKey: 'email',
       header: () => <div className="font-semibold">Email</div>,
@@ -82,13 +87,7 @@ export default function UserTable({ users, onEdit, onDelete, onUserCreated }: Us
       header: () => <div className="font-semibold">Role</div>,
       cell: ({ row }) => (
         <span
-          className={`inline-block rounded px-2 py-1 text-xs font-semibold ${
-            row.original.role === ROLES.ADMIN
-              ? 'bg-blue-100 text-blue-800'
-              : row.original.role === ROLES.USER
-                ? 'bg-pink-100 text-pink-800'
-                : 'bg-purple-100 text-purple-800'
-          }`}
+          className={`inline-block rounded px-2 py-1 text-xs font-semibold`}
         >
           {row.original.role}
         </span>
@@ -96,9 +95,9 @@ export default function UserTable({ users, onEdit, onDelete, onUserCreated }: Us
     },
     {
       id: 'actions',
-      header: () => <div className="font-semibold">Actions</div>,
+      header: () => <div className="font-semibold text-center">Actions</div>,
       cell: ({ row }) => (
-        <div className="flex gap-2">
+        <div className="flex gap-2 justify-center">
           {onEdit && (
             <Button
               variant="ghost"
@@ -109,20 +108,28 @@ export default function UserTable({ users, onEdit, onDelete, onUserCreated }: Us
             </Button>
           )}
           {onDelete && (
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
+            <Popover.Root>
+        <Popover.Trigger asChild>
+          <Button
                   variant="ghost"
                   size="sm"
                   className="text-red-600 hover:text-red-800"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent align="center" side="right" sideOffset={8}>
-                <div className="flex flex-col gap-4">
+        </Popover.Trigger>
+
+        <Popover.Portal>
+          <Popover.Content
+            align="center"
+            side="left"
+            sideOffset={8}
+            className="w-64 rounded-md bg-white border p-4 shadow-lg"
+          >
+            <div className="flex flex-col gap-4">
                   <span className="text-sm">Are you sure you want to delete?</span>
                   <div className="flex justify-end gap-2">
+                    <Popover.Close>
                     <Button
                       variant="outline"
                       size="sm"
@@ -130,6 +137,7 @@ export default function UserTable({ users, onEdit, onDelete, onUserCreated }: Us
                     >
                       Cancel
                     </Button>
+                    </Popover.Close>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -140,8 +148,9 @@ export default function UserTable({ users, onEdit, onDelete, onUserCreated }: Us
                     </Button>
                   </div>
                 </div>
-              </PopoverContent>
-            </Popover>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
           )}
         </div>
       )

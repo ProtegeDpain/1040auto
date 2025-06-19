@@ -15,8 +15,7 @@ import { Link } from 'react-router-dom';
 import { RoleGuard } from '@/components/role-gaurd';
 import { useAuth } from '@/contexts/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-
+import * as Popover from '@radix-ui/react-popover';
 interface DashboardNavProps {
   items: NavItem[];
   setOpen?: Dispatch<SetStateAction<boolean>>;
@@ -85,9 +84,9 @@ export default function DashboardNav({
             </RoleGuard>
           );
         })}
-        <Popover>
-          <PopoverTrigger asChild>
-            <button
+        <Popover.Root>
+        <Popover.Trigger asChild>
+          <button
               className={cn(
                 'flex items-center gap-2 overflow-hidden rounded-md py-2 text-sm font-medium text-red-600 hover:text-red-700 ml-2.5'
               )}
@@ -99,20 +98,31 @@ export default function DashboardNav({
                 ''
               )}
             </button>
-          </PopoverTrigger>
-          <PopoverContent align="center" side="right" sideOffset={8} className="w-64">
+        </Popover.Trigger>
+
+        <Popover.Portal>
+          <Popover.Content
+  align="center"
+  side={isMobileNav || (!isMinimized && !isMobileNav) ? 'bottom' : 'right'}
+  sideOffset={8}
+  className={`w-64 rounded-md bg-white border p-4 shadow-lg ${
+    isMobileNav || (!isMinimized && !isMobileNav) ? 'z-50' : 'z-20'
+  }`}
+>
             <div className="flex flex-col gap-4">
-              <span className="text-sm">Are you sure you want to log out?</span>
+              <span className="text-sm text-gray-800">
+                Are you sure you want to log out?
+              </span>
               <div className="flex justify-end gap-2">
-                <button
-                  className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
-                // Close popover: handled by Radix auto on blur/click outside
-                >
-                  Cancel
-                </button>
+                <Popover.Close asChild>
+                  <button className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">
+                    Cancel
+                  </button>
+                </Popover.Close>
                 <button
                   className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700"
                   onClick={() => {
+                    alert('Logged out');
                     logout();
                     navigate('/login');
                   }}
@@ -121,8 +131,10 @@ export default function DashboardNav({
                 </button>
               </div>
             </div>
-          </PopoverContent>
-        </Popover>
+            <Popover.Arrow className="fill-white" />
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
 
       </TooltipProvider>
     </nav>

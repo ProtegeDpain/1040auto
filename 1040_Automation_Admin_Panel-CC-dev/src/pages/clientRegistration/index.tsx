@@ -238,7 +238,7 @@ const ClientRegistration = () => {
         <div className="flex items-center justify-between px-2 py-2">
           <span className="truncate">{row.original.subClientName || '-'}</span>
           {row.original.subClientId && (
-            <div className="flex gap-2">
+            <div className="flex gap-1">
               <Button
                 variant="ghost"
                 size="sm"

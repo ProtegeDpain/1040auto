@@ -27,10 +27,10 @@ import { validateForm } from '@/utils/validationErrorHandler';
 
 const userFormSchema = z
   .object({
-    full_name: z
-      .string({ required_error: 'Full name is required' })
-      .min(1, { message: 'Full name should be at least 1 character' }),
-    username: z.string().min(1, { message: 'Username is required' }),
+    first_name: z
+      .string({ required_error: 'First name is required' })
+      .min(1, { message: 'First Name should be at least 1 character' }),
+    last_name: z.string().min(1, { message: 'Last Name is required' }),
     phone_number: z.string().min(1, { message: 'Phone number is required' }),
     email: z.string().email({ message: 'Enter a valid email address' }),
     password_hash: z.string().min(1, { message: 'Password is required' }),
@@ -61,8 +61,8 @@ const UserCreateForm = ({ modalClose, onUserCreated }: UserCreateFormProps) => {
   const form = useForm<UserFormSchemaType>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
-      full_name: '',
-      username: '',
+      first_name: '',
+      last_name: '',
       phone_number: '',
       email: '',
       password_hash: '',
@@ -87,8 +87,8 @@ const UserCreateForm = ({ modalClose, onUserCreated }: UserCreateFormProps) => {
 
       // Map form values to API payload
       const payload = {
-        fullName: values.full_name,
-        username: values.username,
+        firstName: values.first_name,
+        lastName: values.last_name,
         phoneNumber: values.phone_number,
         email: values.email,
         password: values.password_hash,
@@ -132,12 +132,12 @@ const UserCreateForm = ({ modalClose, onUserCreated }: UserCreateFormProps) => {
             <div className="flex flex-col gap-6 md:flex-row">
               <FormField
                 control={form.control}
-                name="full_name"
+                name="first_name"
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>Full Name</FormLabel>
+                    <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter full name" {...field} />
+                      <Input placeholder="Enter First Name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -145,12 +145,12 @@ const UserCreateForm = ({ modalClose, onUserCreated }: UserCreateFormProps) => {
               />
               <FormField
                 control={form.control}
-                name="username"
+                name="last_name"
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Last name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter username" {...field} />
+                      <Input placeholder="Enter Last Name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

@@ -50,15 +50,7 @@ const getTasksByIdController = async (req, res) => {
                         lastName: true // Correct field name
                     }
                 },
-                taskStepErrors: {
-                    select: {
-                        status: {
-                            select: {
-                                status_name: true // filing status
-                            }
-                        }
-                    }
-                },
+                task_status: true,
                 updated_at: true // last process date
             }
         });
@@ -70,7 +62,7 @@ const getTasksByIdController = async (req, res) => {
             company: task.client.company.company_name,
             taxSoftwareName: task.client.softwareType.name,
             softwareType: task.client.networkAccessType.name,
-            filingStatus: task.filingStatus?.name || 'Pending',
+            taskStatus: task.task_status || 'Pending',
             lastProcessDate: task.updated_at.toISOString().split('T')[0] // Format date as YYYY-MM-DD
         }));
 

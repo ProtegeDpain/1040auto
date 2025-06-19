@@ -22,8 +22,8 @@ model Roles {
 
 model Users {
   id           Int      @id @default(autoincrement())
-  full_name    String
-  username     String   @unique
+  first_name     String   @map("full_name")     // renamed, maps to existing column
+  last_name      String   @map("username")      // renamed, maps to existing column
   phone_number String?
   email        String   @unique
   password_hash String
@@ -174,7 +174,7 @@ model Tasks {
   rdc_username        String?
   rdc_password        String?
   created_by          Int
-  task_status_id      Int        @default(1)
+  task_status         String     @default("Pending")
   created_at          DateTime   @default(now())
   updated_at          DateTime   @updatedAt
   client              Clients    @relation(fields: [client_id], references: [id])
@@ -182,7 +182,7 @@ model Tasks {
   createdBy           Users      @relation("CreatedTasks", fields: [created_by], references: [id])
   filingStatus        FilingStatus? @relation(fields: [filing_status_id], references: [id])
   taskFiles           TaskFiles[] 
-  taskStatus          TaskStatuses @relation(fields: [task_status_id], references: [id])
+  taskStatus          TaskStatuses @relation("TaskStatusToTasks", fields: [task_status], references: [status_name])
   taskStepErrors      TaskStepErrors[]
   isArchieved         Boolean    @default(false)
   resident_state      String?
@@ -197,7 +197,7 @@ model TaskFiles {
   blob_folder_name  String
   uploaded_at       DateTime @default(now())
   updated_at        DateTime @updatedAt
-  taskStatus          TaskStatuses @relation("TaskStatusToTasks", fields: [task_status_id], references: [id])
+  task              Tasks    @relation(fields: [task_id], references: [id])
   isArchieved Boolean @default(false)
 }
 
