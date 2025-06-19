@@ -48,9 +48,15 @@ const userFormSchema = z
 
 type UserFormSchemaType = z.infer<typeof userFormSchema>;
 
-const UserCreateForm = ({ modalClose }: { modalClose: () => void }) => {
+interface UserCreateFormProps {
+  modalClose: () => void;
+  onUserCreated?: () => void;
+}
+
+const UserCreateForm = ({ modalClose, onUserCreated }: UserCreateFormProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<UserFormSchemaType>({
     resolver: zodResolver(userFormSchema),
@@ -66,6 +72,9 @@ const UserCreateForm = ({ modalClose }: { modalClose: () => void }) => {
   });
 
   const onSubmit = async (values: UserFormSchemaType) => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     try {
       // Validate the data first
       const validationResult = await validateForm(userFormSchema, values);
@@ -89,10 +98,19 @@ const UserCreateForm = ({ modalClose }: { modalClose: () => void }) => {
 
       await createUser(payload);
       toast.success('User created successfully');
+
+      // Close modal first
       modalClose();
+
+      // Then trigger the callback to refresh the user list
+      if (onUserCreated) {
+        onUserCreated();
+      }
     } catch (error) {
       console.error('Error creating user:', error);
       toast.error('Failed to create user');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -272,11 +290,16 @@ const UserCreateForm = ({ modalClose }: { modalClose: () => void }) => {
               variant="secondary"
               size="lg"
               onClick={modalClose}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" size="lg">
-              Create User
+            <Button
+              type="submit"
+              size="lg"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Creating...' : 'Create User'}
             </Button>
           </div>
         </form>

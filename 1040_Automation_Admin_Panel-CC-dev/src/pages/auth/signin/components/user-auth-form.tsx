@@ -104,12 +104,12 @@ export default function UserAuthForm() {
       <div>
         <div className="flex justify-between items-center">
           <label className="block text-sm font-medium">Password</label>
-          <Link
+          {/* <Link
             to="/forgot-password"
             className="text-sm text-[#1b9bd8] hover:underline"
           >
             Forget your password?
-          </Link>
+          </Link> */}
         </div>
         <Input
           type="password"

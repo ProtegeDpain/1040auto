@@ -15,6 +15,7 @@ import { Link } from 'react-router-dom';
 import { RoleGuard } from '@/components/role-gaurd';
 import { useAuth } from '@/contexts/auth-context';
 import { useNavigate } from 'react-router-dom';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 
 interface DashboardNavProps {
   items: NavItem[];
@@ -22,7 +23,7 @@ interface DashboardNavProps {
   isMobileNav?: boolean;
 }
 
-export default function   DashboardNav({
+export default function DashboardNav({
   items,
   setOpen,
   isMobileNav = false
@@ -30,7 +31,7 @@ export default function   DashboardNav({
   const path = usePathname();
   const { isMinimized } = useSidebar();
   const { logout } = useAuth();
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
   if (!items?.length) {
     return null;
@@ -84,34 +85,44 @@ const navigate = useNavigate();
             </RoleGuard>
           );
         })}
-        <Tooltip>
-  <TooltipTrigger asChild>
-    <button
-      onClick={() => {
-        logout(); // call logout from context
-        navigate('/login'); // redirect to login
-      }}
-      className={cn(
-        'flex items-center gap-2 overflow-hidden rounded-md py-2 text-sm font-medium text-red-600 hover:text-red-700 ml-2.5'
-      )}
-    >
-      <Icons.login className="size-5" />
-      {isMobileNav || (!isMinimized && !isMobileNav) ? (
-        <span className="mr-2 truncate">Log out</span>
-      ) : (
-        ''
-      )}
-    </button>
-  </TooltipTrigger>
-  <TooltipContent
-    align="center"
-    side="right"
-    sideOffset={8}
-    className={!isMinimized ? 'hidden' : 'inline-block'}
-  >
-    Log out
-  </TooltipContent>
-</Tooltip>
+        <Popover>
+          <PopoverTrigger asChild>
+            <button
+              className={cn(
+                'flex items-center gap-2 overflow-hidden rounded-md py-2 text-sm font-medium text-red-600 hover:text-red-700 ml-2.5'
+              )}
+            >
+              <Icons.login className="size-5" />
+              {isMobileNav || (!isMinimized && !isMobileNav) ? (
+                <span className="mr-2 truncate">Log out</span>
+              ) : (
+                ''
+              )}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="center" side="right" sideOffset={8} className="w-64">
+            <div className="flex flex-col gap-4">
+              <span className="text-sm">Are you sure you want to log out?</span>
+              <div className="flex justify-end gap-2">
+                <button
+                  className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+                // Close popover: handled by Radix auto on blur/click outside
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700"
+                  onClick={() => {
+                    logout();
+                    navigate('/login');
+                  }}
+                >
+                  Log out
+                </button>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
 
       </TooltipProvider>
     </nav>

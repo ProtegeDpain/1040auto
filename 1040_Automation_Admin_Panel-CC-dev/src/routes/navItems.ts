@@ -7,7 +7,14 @@ export const navItems: NavItem[] = [
     href: '/',
     icon: 'dashboard',
     label: 'Dashboard',
-    roles: [ROLES.ADMIN] // Accessible to both Admin and User roles
+    roles: [ROLES.ADMIN, ROLES.USER] // Accessible to both Admin and User roles
+  },
+  {
+    title: 'Task Creation',
+    href: '/task_master',
+    icon: 'kanban', // Changed from 'settings' to 'kanban' for a more relevant task logo
+    label: 'Task Creation',
+    roles: [ROLES.ADMIN, ROLES.USER] // Accessible to both Admin and User roles
   },
   {
     title: 'Users',
@@ -23,13 +30,7 @@ export const navItems: NavItem[] = [
     label: 'Client Registration',
     roles: [ROLES.ADMIN, ROLES.USER] // Accessible to both Admin and User roles
   },
-  {
-    title: 'Task Creation',
-    href: '/task_master',
-    icon: 'kanban', // Changed from 'settings' to 'kanban' for a more relevant task logo
-    label: 'Task Creation',
-    roles: [ROLES.ADMIN, ROLES.USER] // Accessible to both Admin and User roles
-  },
+
   {
     title: 'Admin Configurations',
     href: '/adminConfigurations',

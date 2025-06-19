@@ -187,36 +187,36 @@ export default function SubClientGIF({
     event.preventDefault();
     setStep((s) => (s > 0 ? s - 1 : s));
   }
-function nextStep(
-  event: React.MouseEvent<HTMLButtonElement>,
-  values: SubClientFormValues,
-  setErrors: (errors: FormikErrors<SubClientFormValues>) => void,
-  step: number,
-  setStep: React.Dispatch<React.SetStateAction<number>>
-) {
-  event.preventDefault();
+  function nextStep(
+    event: React.MouseEvent<HTMLButtonElement>,
+    values: SubClientFormValues,
+    setErrors: (errors: FormikErrors<SubClientFormValues>) => void,
+    step: number,
+    setStep: React.Dispatch<React.SetStateAction<number>>
+  ) {
+    event.preventDefault();
 
-  stepSchemas[step]
-    .validate(values, { abortEarly: false })
-    .then(() => {
-      setStep((prev) => prev + 1);
-    })
-    .catch((validationError: Yup.ValidationError) => {
-      const errors: FormikErrors<SubClientFormValues> = {};
+    stepSchemas[step]
+      .validate(values, { abortEarly: false })
+      .then(() => {
+        setStep((prev) => prev + 1);
+      })
+      .catch((validationError: Yup.ValidationError) => {
+        const errors: FormikErrors<SubClientFormValues> = {};
 
-      validationError.inner.forEach((err) => {
-        if (err.path) {
-          errors[err.path as keyof SubClientFormValues] = err.message;
+        validationError.inner.forEach((err) => {
+          if (err.path) {
+            errors[err.path as keyof SubClientFormValues] = err.message;
 
-          toast.error(err.message, {
-            toastId: `step-${step}-${err.path}`, // prevents duplicates
-          });
-        }
+            toast.error(err.message, {
+              toastId: `step-${step}-${err.path}`, // prevents duplicates
+            });
+          }
+        });
+
+        setErrors(errors);
       });
-
-      setErrors(errors);
-    });
-}
+  }
 
 
   // Keep form in sync with editSubClient prop (if you add edit functionality for subclients)
@@ -300,22 +300,23 @@ function nextStep(
   return (
     <Formik<SubClientFormValues>
       initialValues={initialForm}
-      
+
       onSubmit={async (values, { setSubmitting, resetForm }) => {
         try {
           setSubmitting(true);
           const response = await createSubClientService(values);
-          
+
           // Call the parent component's onSubmit if provided
           if (onSubmit) {
             onSubmit(response);
           }
-          
+
           toast.success;
-          
+
           resetForm();
         } catch (error: any) {
           console.error('Failed to create subclient:', error);
+
           toast.error(error.message)
         } finally {
           setSubmitting(false);
@@ -444,6 +445,7 @@ function nextStep(
                         ))}
                       </SelectContent>
                     </Select>
+                    {/* No need for extra SelectTrigger here; remove or use error styling with errors/touched if needed */}
                     <ErrorMessage
                       name="residentialState"
                       component="div"
@@ -479,12 +481,13 @@ function nextStep(
                     <Label>
                       First Name <span className="text-red-500"> *</span>
                     </Label>
-                    <Field as={Input} name="firstName" />
-                    <ErrorMessage
+                    <Field
+                      as={Input}
                       name="firstName"
-                      component="div"
-                      className="mt-1 text-xs text-red-500"
+                      className={errors.firstName && touched.firstName ? 'border-red-500 focus:border-red-500' : ''}
                     />
+
+                    <ErrorMessage name="firstName" component="div" className="mt-1 text-xs text-red-500" />
                   </div>
                   <div>
                     <Label>Middle Initial</Label>
@@ -502,6 +505,7 @@ function nextStep(
                         />
                       )}
                     </Field>
+
                     <ErrorMessage
                       name="middleInitial"
                       component="div"
@@ -1085,11 +1089,11 @@ function nextStep(
                 </Button>
                 {step < steps.length - 1 && (
                   <Button
-  type="button"
-  onClick={(e) => nextStep(e, values, setErrors, step, setStep)}
->
-  Next
-</Button>
+                    type="button"
+                    onClick={(e) => nextStep(e, values, setErrors, step, setStep)}
+                  >
+                    Next
+                  </Button>
 
                 )}
               </div>

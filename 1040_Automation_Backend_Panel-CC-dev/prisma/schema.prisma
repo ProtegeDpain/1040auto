@@ -174,13 +174,15 @@ model Tasks {
   rdc_username        String?
   rdc_password        String?
   created_by          Int
+  task_status_id      Int        @default(1)
   created_at          DateTime   @default(now())
   updated_at          DateTime   @updatedAt
   client              Clients    @relation(fields: [client_id], references: [id])
   subClient           SubClients @relation(fields: [sub_client_id], references: [id])
   createdBy           Users      @relation("CreatedTasks", fields: [created_by], references: [id])
   filingStatus        FilingStatus? @relation(fields: [filing_status_id], references: [id])
-  taskFiles           TaskFiles[]
+  taskFiles           TaskFiles[] 
+  taskStatus          TaskStatuses @relation(fields: [task_status_id], references: [id])
   taskStepErrors      TaskStepErrors[]
   isArchieved         Boolean    @default(false)
   resident_state      String?
@@ -195,7 +197,7 @@ model TaskFiles {
   blob_folder_name  String
   uploaded_at       DateTime @default(now())
   updated_at        DateTime @updatedAt
-  task              Tasks    @relation(fields: [task_id], references: [id])
+  taskStatus          TaskStatuses @relation("TaskStatusToTasks", fields: [task_status_id], references: [id])
   isArchieved Boolean @default(false)
 }
 
@@ -206,6 +208,7 @@ model TaskStatuses {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
   taskStepErrors TaskStepErrors[]
+  tasks           Tasks[]    @relation("TaskStatusToTasks")
   isArchieved Boolean @default(false)
 }
 

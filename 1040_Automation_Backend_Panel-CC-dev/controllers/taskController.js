@@ -70,7 +70,7 @@ const getTasksByIdController = async (req, res) => {
             company: task.client.company.company_name,
             taxSoftwareName: task.client.softwareType.name,
             softwareType: task.client.networkAccessType.name,
-            filingStatus: task.taskStepErrors[0]?.status.status_name || 'Unknown',
+            filingStatus: task.filingStatus?.name || 'Pending',
             lastProcessDate: task.updated_at.toISOString().split('T')[0] // Format date as YYYY-MM-DD
         }));
 
@@ -199,7 +199,7 @@ const addTaskController = async (req, res) => {
                     sub_client_id: Number(taskData.sub_client_id),
                     tax_year: parseInt(taskData.tax_year, 10),
                     resident_state: taskData.resident_state,
-                    
+
                     // software_name: taskData.software_name,
                     software_exe_path: taskData.software_exe_path,
                     software_ip_address: taskData.software_ip_address,
@@ -239,7 +239,7 @@ const addTaskController = async (req, res) => {
 
     } catch (error) {
         console.error('Error in addTaskController:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Internal server error',
             message: error.message
         });

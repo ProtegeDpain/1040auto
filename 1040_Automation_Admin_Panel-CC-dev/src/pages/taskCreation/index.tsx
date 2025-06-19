@@ -9,19 +9,22 @@ import { TaskCreationForm } from './components/task-creation-form';
 import { ComboBox } from '@/components/ui/combobox';
 import DataTable from '@/components/shared/data-table';
 import { ColumnDef } from '@tanstack/react-table';
-
+import { TypesProvider } from '@/contexts/TypesContext';
 import { getTasksById } from '@/services/taskService';
+
 
 // Add Task Button Component
 function AddTaskButton({ onClick }) {
   return (
+
     <Button
       onClick={onClick}
-      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+      className="flex items-center gap-2"
     >
       <Icons.add className="h-4 w-4" />
       Add Task
     </Button>
+
   );
 }
 
@@ -113,13 +116,7 @@ function TaskTable({ tasks, onViewTask }) {
       accessorKey: 'client',
       header: () => (
         <div className="flex flex-col gap-1">
-          <ComboBox
-            value={filters.client}
-            options={uniqueValues.clients}
-            placeholder="Filter Client"
-            onChange={(value) => handleFilterChange('client', value)}
-            className="mb-1 h-8 w-full text-xs "
-          />
+          
           <span>Client</span>
         </div>
       ),
@@ -129,13 +126,7 @@ function TaskTable({ tasks, onViewTask }) {
       accessorKey: 'subClient',
       header: () => (
         <div className="flex flex-col gap-1">
-          <ComboBox
-            value={filters.subClient}
-            options={uniqueValues.subClients}
-            placeholder="Filter Sub Client"
-            onChange={(value) => handleFilterChange('subClient', value)}
-            className="mb-1 h-8 w-full text-xs"
-          />
+          
           <span>Sub Client</span>
         </div>
       ),
@@ -145,13 +136,7 @@ function TaskTable({ tasks, onViewTask }) {
       accessorKey: 'companyName',
       header: () => (
         <div className="flex flex-col gap-1">
-          <ComboBox
-            value={filters.companyName}
-            options={uniqueValues.companies}
-            placeholder="Filter Company"
-            onChange={(value) => handleFilterChange('companyName', value)}
-            className="mb-1 h-8 w-full text-xs"
-          />
+          
           <span>Company</span>
         </div>
       ),
@@ -161,13 +146,7 @@ function TaskTable({ tasks, onViewTask }) {
       accessorKey: 'software',
       header: () => (
         <div className="flex flex-col gap-1">
-          <ComboBox
-            value={filters.software}
-            options={uniqueValues.softwares}
-            placeholder="Filter Software"
-            onChange={(value) => handleFilterChange('software', value)}
-            className="mb-1 h-8 w-full text-xs"
-          />
+          
           <span>Tax Software</span>
         </div>
       ),
@@ -177,13 +156,7 @@ function TaskTable({ tasks, onViewTask }) {
       accessorKey: 'softwareType',
       header: () => (
         <div className="flex flex-col gap-1">
-          <ComboBox
-            value={filters.softwareType}
-            options={uniqueValues.softwareTypes}
-            placeholder="Filter Type"
-            onChange={(value) => handleFilterChange('softwareType', value)}
-            className="mb-1 h-8 w-full text-xs"
-          />
+          
           <span>Software Type</span>
         </div>
       ),
@@ -193,21 +166,14 @@ function TaskTable({ tasks, onViewTask }) {
       accessorKey: 'status',
       header: () => (
         <div className="flex flex-col gap-1">
-          <ComboBox
-            value={filters.status}
-            options={uniqueValues.statuses}
-            placeholder="Filter Status"
-            onChange={(value) => handleFilterChange('status', value)}
-            className="mb-1 h-8 w-full text-xs"
-          />
+          
           <span>Filing Status</span>
         </div>
       ),
       cell: (info) => (
         <span
-          className={`rounded px-3 py-1 font-medium ${
-            info.getValue() === 'Unknown' ? 'bg-yellow-200 text-yellow-800' : 'bg-blue-200 text-blue-800'
-          }`}
+          className={`rounded px-3 py-1 font-medium ${info.getValue() === 'Unknown' ? 'bg-yellow-200 text-yellow-800' : 'bg-blue-200 text-blue-800'
+            }`}
         >
           {String(info.getValue())}
         </span>
@@ -252,25 +218,70 @@ function TaskTable({ tasks, onViewTask }) {
       header: 'Update Documents',
       cell: (info) => (
         <button
-          className="flex gap-2 rounded border-2 p-2 hover:bg-muted"
+          className="flex gap-2 rounded  p-2 hover:bg-muted"
           title="Upload Documents"
         >
           <Icons.upload className="h-5 w-5" />
-          <b>Upload</b>
+          
         </button>
       )
     }
   ];
 
   return (
-    <div className="mt-4 overflow-x-auto rounded-lg border border-border bg-card">
-      <div className="bg-muted px-4 pb-2 pt-4">
-        <h3 className="text-lg font-semibold tracking-tight text-foreground">
-          Tasks
-        </h3>
+    <div>
+      <div className=" px-4 pb-2 pt-4 flex gap-2">
+        <ComboBox
+            value={filters.client}
+            options={uniqueValues.clients}
+            placeholder="Filter Client"
+            onChange={(value) => handleFilterChange('client', value)}
+
+          />
+          <ComboBox
+            value={filters.subClient}
+            options={uniqueValues.subClients}
+            placeholder="Filter Sub Client"
+            onChange={(value) => handleFilterChange('subClient', value)}
+            
+          />
+          <ComboBox
+            value={filters.companyName}
+            options={uniqueValues.companies}
+            placeholder="Filter Company"
+            onChange={(value) => handleFilterChange('companyName', value)}
+            
+          />
+          
+          <ComboBox
+            value={filters.software}
+            options={uniqueValues.softwares}
+            placeholder="Filter Tax Software"
+            onChange={(value) => handleFilterChange('software', value)}
+          
+          />
+          <ComboBox
+            value={filters.softwareType}
+            options={uniqueValues.softwareTypes}
+            placeholder="Filter Network Access"
+            onChange={(value) => handleFilterChange('softwareType', value)}
+          
+          />
+          <ComboBox
+            value={filters.status}
+            options={uniqueValues.statuses}
+            placeholder="Filter Status"
+            onChange={(value) => handleFilterChange('status', value)}
+           
+          />
+          
       </div>
+    <div className="mt-4 overflow-x-auto rounded-lg border border-border bg-card">
+      
       <DataTable columns={columns} data={filteredTasks} pageCount={1} />
     </div>
+    </div>
+
   );
 }
 
@@ -338,39 +349,41 @@ export default function TaskManagement() {
   const handleTaskCreated = (newTask) => {
     setTasks((prev) => [...prev, newTask]);
   };
-  
+
   const handleViewTask = (task) => {
     setSelectedTask(task);
     setViewModalOpen(true);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 px-8 py-12">
-      <div className="mb-2 flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight text-foreground">
-          Task Management
-        </h2>
-        <AddTaskButton onClick={() => setOpen(true)} />
-      </div>
-      <hr className="my-6 border-gray-300" />
-      {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <Icons.spinner className="h-8 w-8 animate-spin" />
+    <TypesProvider>
+      <div className="min-h-screen bg-gray-50 px-8 py-12">
+        <div className="mb-2 flex items-center justify-between space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
+            Task Management
+          </h2>
+          <AddTaskButton onClick={() => setOpen(true)} />
         </div>
-      ) : (
-        <TaskTable tasks={tasks} onViewTask={handleViewTask} />
-      )}
-      <TaskCreationModal
-        open={open}
-        onOpenChange={setOpen}
-        onTaskCreated={handleTaskCreated}
-      />
-      <ViewTaskModal
-        open={viewModalOpen}
-        onOpenChange={setViewModalOpen}
-        selectedTask={selectedTask}
-        timeline={mockTimeline}
-      />
-    </div>
+        <hr className="my-6 border-gray-300" />
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Icons.spinner className="h-8 w-8 animate-spin" />
+          </div>
+        ) : (
+          <TaskTable tasks={tasks} onViewTask={handleViewTask} />
+        )}
+        <TaskCreationModal
+          open={open}
+          onOpenChange={setOpen}
+          onTaskCreated={handleTaskCreated}
+        />
+        <ViewTaskModal
+          open={viewModalOpen}
+          onOpenChange={setViewModalOpen}
+          selectedTask={selectedTask}
+          timeline={mockTimeline}
+        />
+      </div>
+    </TypesProvider>
   );
 }

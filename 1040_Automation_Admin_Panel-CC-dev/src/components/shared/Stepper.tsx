@@ -14,9 +14,9 @@ export const Stepper: React.FC<StepperProps> = ({ steps, step }) => (
           className={cn(
             'flex h-8 w-8 items-center justify-center rounded-full font-bold',
             idx === step
-              ? 'bg-blue-600 text-white'
+              ? 'bg-[#1b9bd8] text-white'
               : 'bg-gray-200 text-gray-600',
-            idx < step ? 'border-2 border-blue-600' : ''
+            idx < step ? 'border-2 border-[#1b9bd8]' : ''
           )}
         >
           {idx + 1}

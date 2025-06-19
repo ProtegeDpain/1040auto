@@ -216,6 +216,7 @@ export default function ClientForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
+                      
                       {networkAccessTypes.map((type) => (
                         <SelectItem key={type.id} value={String(type.id)}>
                           {type.name}

@@ -16,11 +16,14 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Icons } from '@/components/ui/icons.tsx';
-import { softwareTypes, type TaskFormData, initialFormState } from '../data';
+import { type TaskFormData, initialFormState } from '../data';
+import { useTypes } from '@/contexts/TypesContext';
 import * as Yup from 'yup';
 import { toast } from 'react-toastify';
 import { FormikErrors } from 'formik'; // if you use Formik types
 import { validateFiles } from '../validations/fileValidator';
+
+
 
 interface SubClientData {
   id: number;
@@ -37,6 +40,7 @@ export interface TaskCreationFormProps {
 }
 
 export function TaskCreationForm({ onTaskCreated, onClose }: TaskCreationFormProps) {
+  const { networkAccessTypes } = useTypes();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<TaskFormData>(initialFormState);
@@ -71,42 +75,42 @@ export function TaskCreationForm({ onTaskCreated, onClose }: TaskCreationFormPro
 
     fetchData();
   }, []);
-  
-const [errors, setErrors] = useState<FormikErrors<TaskFormData>>({});
-async function validateStep(
-  step: number,
-  form: TaskFormData,
-  setErrors: (errors: FormikErrors<TaskFormData>) => void
-): Promise<boolean> {
-  try {
-    await stepSchemas[step - 1].validate(form, { abortEarly: false });
-    return true;
-  } catch (validationError) {
-    const errors: FormikErrors<TaskFormData> = {};
-    if (validationError instanceof Yup.ValidationError) {
-      validationError.inner.forEach((err) => {
-        if (err.path) {
-          errors[err.path as keyof TaskFormData] = err.message;
-          toast.error(err.message, {
-            toastId: `step-${step}-${err.path}`,
-          });
-        }
-      });
+
+  const [errors, setErrors] = useState<FormikErrors<TaskFormData>>({});
+  async function validateStep(
+    step: number,
+    form: TaskFormData,
+    setErrors: (errors: FormikErrors<TaskFormData>) => void
+  ): Promise<boolean> {
+    try {
+      await stepSchemas[step - 1].validate(form, { abortEarly: false });
+      return true;
+    } catch (validationError) {
+      const errors: FormikErrors<TaskFormData> = {};
+      if (validationError instanceof Yup.ValidationError) {
+        validationError.inner.forEach((err) => {
+          if (err.path) {
+            errors[err.path as keyof TaskFormData] = err.message;
+            toast.error(err.message, {
+              toastId: `step-${step}-${err.path}`,
+            });
+          }
+        });
+      }
+      setErrors(errors);
+      return false;
     }
-    setErrors(errors);
-    return false;
   }
-}
 
-const handleNext = async () => {
-  const isValid = await validateStep(step, form, setErrors); // ✅ await the Promise
+  const handleNext = async () => {
+    const isValid = await validateStep(step, form, setErrors); // ✅ await the Promise
 
-  if (isValid) {
-    setStep((prev) => prev + 1);
-  }
-};
+    if (isValid) {
+      setStep((prev) => prev + 1);
+    }
+  };
 
-  
+
   const handleBack = () => setStep((prev) => prev - 1);
 
   const handleChange = (field: keyof TaskFormData, value: string | number) => {
@@ -120,12 +124,12 @@ const handleNext = async () => {
       return;
     }
 
-const isFormValid = await validateStep(3, form, setErrors);
-  const areFilesValid = validateFiles(supportingDocs);
+    const isFormValid = await validateStep(3, form, setErrors);
+    const areFilesValid = validateFiles(supportingDocs);
 
-  if (!isFormValid || !areFilesValid) {
-    return;
-  }
+    if (!isFormValid || !areFilesValid) {
+      return;
+    }
     setLoading(true);
     try {
       // TODO: Upload documents and get blobUrl
@@ -279,8 +283,8 @@ const isFormValid = await validateStep(3, form, setErrors);
                   {subClients
                     .filter(sc => !form.client_id || sc.client_id === Number(form.client_id))
                     .map((sc) => (
-                      <SelectItem 
-                        key={sc.id} 
+                      <SelectItem
+                        key={sc.id}
                         value={sc.sub_client_name}
                       >
                         {sc.sub_client_name}
@@ -351,9 +355,9 @@ const isFormValid = await validateStep(3, form, setErrors);
                   <SelectValue placeholder="Select Software Type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {softwareTypes.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                  {networkAccessTypes.map((type) => (
+                    <SelectItem key={type.id} value={String(type.id)}>
+                      {type.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -764,19 +768,22 @@ const isFormValid = await validateStep(3, form, setErrors);
       {/* Step Indicator */}
       <div className="mb-6 flex items-center justify-center gap-2 md:gap-4">
         <div
-          className={`flex h-6 w-6 items-center justify-center rounded-full text-sm md:h-8 md:w-8 md:text-base ${step === 1 ? 'bg-primary text-white' : 'bg-gray-200'}`}
+          className={`flex h-6 w-6 items-center justify-center rounded-full text-sm md:h-8 md:w-8 md:text-base ${step === 1 ? 'bg-[#1b9bd8] text-white'
+              : 'bg-gray-200 text-gray-600'}`}
         >
           1
         </div>
         <div className="h-1 w-8 bg-gray-200 md:w-16" />
         <div
-          className={`flex h-6 w-6 items-center justify-center rounded-full text-sm md:h-8 md:w-8 md:text-base ${step === 2 ? 'bg-primary text-white' : 'bg-gray-200'}`}
+          className={`flex h-6 w-6 items-center justify-center rounded-full text-sm md:h-8 md:w-8 md:text-base ${step === 2 ? 'bg-[#1b9bd8] text-white'
+              : 'bg-gray-200 text-gray-600'}`}
         >
           2
         </div>
         <div className="h-1 w-8 bg-gray-200 md:w-16" />
         <div
-          className={`flex h-6 w-6 items-center justify-center rounded-full text-sm md:h-8 md:w-8 md:text-base ${step === 3 ? 'bg-primary text-white' : 'bg-gray-200'}`}
+          className={`flex h-6 w-6 items-center justify-center rounded-full text-sm md:h-8 md:w-8 md:text-base  ${step === 3 ? 'bg-[#1b9bd8] text-white'
+              : 'bg-gray-200 text-gray-600'}`}
         >
           3
         </div>

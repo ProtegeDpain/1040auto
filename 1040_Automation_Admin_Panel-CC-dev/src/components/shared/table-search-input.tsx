@@ -1,45 +1,44 @@
-import React, { useCallback } from 'react';
-import { Input } from '../ui/input';
-import { useDebounce } from 'use-debounce';
-import { useSearchParams } from 'react-router-dom';
+import React from 'react';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 
-export default function TableSearchInput({
-  placeholder
-}: {
+interface TableSearchInputProps {
   placeholder?: string;
-}) {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const country = searchParams.get('search') || '';
-  const [searchTerm, setSearchTerm] = React.useState(country);
-  // debounce the search input
-  const [debouncedValue] = useDebounce(searchTerm, 1000);
-  const handleSettingSearchParams = useCallback((newSearchValue: string) => {
-    // Update the URL with the new search value
-    if (
-      newSearchValue === '' ||
-      newSearchValue === undefined ||
-      !newSearchValue
-    ) {
-      searchParams.delete('search');
-      setSearchParams(searchParams);
-      return;
-    }
-    setSearchParams({
-      ...Object.fromEntries(searchParams),
-      page: '1', // Spread the existing search params
-      search: newSearchValue // Update the search value
-    });
-  }, []);
+  value?: string;
+  onChange?: (value: string) => void;
+  className?: string;
+}
 
-  React.useEffect(() => {
-    handleSettingSearchParams(debouncedValue);
-  }, [debouncedValue, handleSettingSearchParams]);
+export default function TableSearchInput({ 
+  placeholder = "Search...", 
+  value = "", 
+  onChange,
+  className = ""
+}: TableSearchInputProps) {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault(); // Prevent any form submission
+    const newValue = e.target.value;
+    onChange?.(newValue);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    // Prevent form submission on Enter key
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+  };
+
   return (
-    <Input
-      placeholder={placeholder || `Search country...`}
-      value={searchTerm}
-      onChange={(event) => setSearchTerm(event.target.value)}
-      className="w-full md:max-w-sm"
-    />
+    <div className={`relative ${className}`}>
+      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <Input
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={handleInputChange}
+        onKeyDown={handleKeyDown}
+        className="pl-9"
+      />
+    </div>
   );
 }
