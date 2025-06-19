@@ -58,7 +58,7 @@ export const updateUser = async (userId: string, formData) => {
       role_id: formData.roleId,
     };
     const response = await axiosInstance.put(`/api/users/${userId}`, payload);
-    return response.data;
+    return response.data.user;
   } catch (error) {
     console.error('Error updating user:', error);
     const errorMessage = (error as any)?.response?.data?.message || 'User update failed';

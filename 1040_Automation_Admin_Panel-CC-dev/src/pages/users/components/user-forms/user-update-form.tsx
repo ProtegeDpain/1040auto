@@ -21,13 +21,14 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { useState, useEffect } from 'react';
 import { updateUser } from '@/services/userService';
+import { Employee } from '@/constants/data';
 
 const userFormSchema = z
   .object({
-    full_name: z
-      .string({ required_error: 'Full name is required' })
-      .min(1, { message: 'Full name should be at least 1 character' }),
-    username: z.string().min(1, { message: 'Username is required' }),
+    first_name: z
+      .string({ required_error: 'First name is required' })
+      .min(1, { message: 'First name should be at least 1 character' }),
+    last_name: z.string().min(1, { message: 'Last Name is required' }),
     phone_number: z.string().min(1, { message: 'Phone number is required' }),
     email: z.string().email({ message: 'Enter a valid email address' }),
     role: z.enum(['Admin', 'User'], {
@@ -40,14 +41,14 @@ type UserFormSchemaType = z.infer<typeof userFormSchema>;
 type Props = {
   modalClose: () => void;
   initialValues: {
-    full_name: string;
-    username: string;
+    first_name: string;
+    last_name: string;
     phone_number: string;
     email: string;
     role: "Admin" | "User";
   };
   userId: string | number;
-  onSuccess?: () => void | Promise<void>;
+  onSuccess?: ( updatedUser: Employee) => void | Promise<void>;
 };
 
 const UserUpdateForm = ({ modalClose, initialValues, userId, onSuccess }: Props) => {
@@ -68,14 +69,14 @@ const UserUpdateForm = ({ modalClose, initialValues, userId, onSuccess }: Props)
     setLoading(true);
     try {
       const payload = {
-        fullName: values.full_name,
-        username: values.username,
+        firstName: values.first_name,
+        lastName: values.last_name,
         phoneNumber: values.phone_number,
         email: values.email,
         roleId: values.role === 'Admin' ? 1 : 2
       };
-      await updateUser(String(userId), payload);
-      if (onSuccess) await onSuccess();
+      const updatedUser = await updateUser(String(userId), payload);
+      if (onSuccess) await onSuccess(updatedUser);
       modalClose();
     } catch (error) {
       console.error(error);
@@ -101,10 +102,10 @@ const UserUpdateForm = ({ modalClose, initialValues, userId, onSuccess }: Props)
             <div className="flex flex-col gap-6 md:flex-row">
               <FormField
                 control={form.control}
-                name="full_name"
+                name="first_name"
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>Full Name</FormLabel>
+                    <FormLabel>First Name</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter full name" {...field} />
                     </FormControl>
@@ -114,10 +115,10 @@ const UserUpdateForm = ({ modalClose, initialValues, userId, onSuccess }: Props)
               />
               <FormField
                 control={form.control}
-                name="username"
+                name="last_name"
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>Username</FormLabel>
+                    <FormLabel>Last Name</FormLabel>
                     <FormControl>
                       <Input placeholder="Enter username" {...field} />
                     </FormControl>

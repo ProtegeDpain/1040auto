@@ -20,7 +20,7 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [totalUsers, setTotalUsers] = useState(0);
   const [editingUser, setEditingUser] = useState<any | null>(null);
-  const [deletingUserId, setDeletingUserId] = useState<number | null>(null);
+
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const search = searchParams.get('search')?.toLowerCase() || '';
 
@@ -63,9 +63,11 @@ export default function UsersPage() {
   const handleDelete = async (user: any) => {
     try {
       await archiveUser(user.id);
-      setDeletingUserId(null);
+       
+
+  setUsers((prev) => prev.filter((u) => u.id !== user.id));
       // Refresh users after deletion
-      await fetchUsers();
+
     } catch (error) {
       console.error(error);
     }
@@ -76,15 +78,44 @@ export default function UsersPage() {
   };
 
   const handleUserCreated = useCallback(async () => {
-    // Refresh the user list when a new user is created
-    await fetchUsers();
-  }, [fetchUsers]);
+  try {
+    const allUsers = await getUsers();
+    const userArray = Array.isArray(allUsers) ? allUsers : [];
 
-  const handleUserUpdated = useCallback(async () => {
-    // Refresh the user list when a user is updated
-    setEditingUser(null);
-    await fetchUsers();
-  }, [fetchUsers]);
+    // Get the most recently created user (assuming last in list)
+    const newlyCreatedUser = userArray[0];
+
+    // Optional: check if they match current search or filter
+    if (
+      (roleFilter === 'all' || newlyCreatedUser.role === roleFilter) &&
+      (
+        newlyCreatedUser.first_name?.toLowerCase().includes(search) ||
+        newlyCreatedUser.username?.toLowerCase().includes(search) ||
+        newlyCreatedUser.email?.toLowerCase().includes(search) ||
+        newlyCreatedUser.phone_number?.toLowerCase().includes(search)
+      )
+    ) {
+      setUsers((prev) => [newlyCreatedUser, ...prev.slice(0, pageLimit - 1)]);
+      setTotalUsers((prev) => prev + 1);
+    } else {
+      // fallback: reload normally
+      await fetchUsers();
+    }
+  } catch (err) {
+    console.error("Failed to refresh users after creation", err);
+  }
+}, [roleFilter, search, fetchUsers, pageLimit]);
+
+  
+const handleUserUpdated = useCallback(async (updatedUser: any) => {
+  setEditingUser(null);
+
+  setUsers((prevUsers) =>
+    prevUsers.map((user) =>
+      user.id === updatedUser.id ? updatedUser : user
+    )
+  );
+}, []);
 
   const pageCount = Math.ceil(totalUsers / pageLimit);
 
@@ -125,8 +156,8 @@ export default function UsersPage() {
             <UserUpdateForm
               modalClose={() => setEditingUser(null)}
               initialValues={{
-                full_name: editingUser.first_name,
-                username: editingUser.username,
+                first_name: editingUser.first_name,
+                last_name: editingUser.last_name,
                 phone_number: editingUser.phone_number,
                 email: editingUser.email,
                 role: editingUser.role === 'Admin' ? 'Admin' : 'User',
@@ -138,34 +169,7 @@ export default function UsersPage() {
         </div>
       )}
       
-      {deletingUserId !== null && (
-        <Popover open={true} onOpenChange={() => setDeletingUserId(null)}>
-          <PopoverTrigger asChild>
-            <button className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700">
-              Delete
-            </button>
-          </PopoverTrigger>
-          <PopoverContent align="center" side="right" sideOffset={8} className="w-64">
-            <div className="flex flex-col gap-4">
-              <span className="text-sm">Are you sure you want to delete?</span>
-              <div className="flex justify-end gap-2">
-                <button
-                  className="px-3 py-1 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  onClick={() => setDeletingUserId(null)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700"
-                  onClick={() => handleDelete(deletingUserId!)}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-      )}
+      
     </div>
   );
 }

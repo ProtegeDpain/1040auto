@@ -1,8 +1,8 @@
 const Joi = require('joi');
 
 const userCreateSchema = Joi.object({
-    full_name: Joi.string().required(),
-    username: Joi.string().required(), // just a string, not email
+    first_name: Joi.string().required(),
+    last_name: Joi.string().required(), // just a string, not email
     phone_number: Joi.string().optional().allow(''),
     email: Joi.string().email().required(),
     role_id: Joi.number().integer().required(),
@@ -17,8 +17,8 @@ function validateUser(data) {
 }
 function validateUserUpdate(data) {
     const userUpdateSchema = Joi.object({
-        full_name: Joi.string().required(),
-        username: Joi.string().required(), // just a string, not email
+        first_name: Joi.string().required(),
+        last_name: Joi.string().required(), // just a string, not email
         phone_number: Joi.string().optional().allow(''),
         email: Joi.string().email().required(),
         role_id: Joi.number().integer().required(),
